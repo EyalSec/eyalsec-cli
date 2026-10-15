@@ -4,6 +4,7 @@ Read your EyalSec events and machines from a terminal, a cron job or a CI step. 
 
 [![Website](https://img.shields.io/badge/website-eyalsec.com-e8b04b)](https://eyalsec.com)
 [![API docs](https://img.shields.io/badge/docs-API-2a2c27)](https://eyalsec.com/docs/api)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/EyalSec/eyalsec-cli/badge)](https://scorecard.dev/viewer/?uri=github.com/EyalSec/eyalsec-cli)
 
 EyalSec follows untrusted data (network input, files, environment variables and more) through your running program and reports when it reaches a risky operation: a SQL query, a shell command, deserialization, a file path. Each event names the operation, the line of code, the value it received and where the untrusted part came from. This tool reads those events; it never changes anything on your account.
 
