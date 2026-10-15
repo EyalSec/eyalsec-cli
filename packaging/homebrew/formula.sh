@@ -33,7 +33,6 @@ cat <<RUBY
 class EyalsecCli < Formula
   desc "Read your EyalSec security events and machines from the terminal"
   homepage "https://eyalsec.com"
-  version "${version}"
   license "MIT"
 
   on_macos do
