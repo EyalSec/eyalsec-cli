@@ -1,0 +1,20 @@
+Source: eyalsec-cli
+Section: utils
+Priority: optional
+Maintainer: Eyal Gabay <eyal@eyalsec.com>
+Build-Depends: debhelper-compat (= 13), golang-go (>= 2:1.22~)
+Standards-Version: 4.6.2
+Homepage: https://github.com/EyalSec/eyalsec-cli
+Vcs-Browser: https://github.com/EyalSec/eyalsec-cli
+Vcs-Git: https://github.com/EyalSec/eyalsec-cli.git
+Rules-Requires-Root: no
+
+Package: eyalsec-cli
+Architecture: any
+Depends: ca-certificates, ${misc:Depends}
+Built-Using: ${misc:Built-Using}
+Description: command-line client for the EyalSec API
+ eyalsec-cli reads your EyalSec security events and machines from a
+ terminal, a cron job or a CI step. It lists and searches events, shows one
+ event's full detail, exports matching events as CSV or JSON, and lists
+ machines and runs, through the EyalSec API. A read-only API key is enough.

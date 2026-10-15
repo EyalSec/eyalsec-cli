@@ -1,0 +1,34 @@
+#!/usr/bin/make -f
+# eyalsec-cli uses only the Go standard library: no network, no vendoring.
+
+export CGO_ENABLED = 0
+export GOTOOLCHAIN = local
+export GOPROXY = off
+export GOFLAGS = -trimpath -mod=readonly
+export GOCACHE = $(CURDIR)/debian/.gocache
+export GOPATH = $(CURDIR)/debian/.gopath
+
+VERSION := $(shell dpkg-parsechangelog -S Version | sed -e 's/-[^-]*$$//' -e 's/^[0-9]*://' -e 's/[~+].*$$//')
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+
+override_dh_auto_build:
+	go build -ldflags "-s -w -X eyalsec.com/cli/internal/cli.version=v$(VERSION)" -o debian/eyalsec-cli-bin ./cmd/eyalsec-cli
+
+override_dh_auto_test:
+ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+	go test ./...
+endif
+
+override_dh_auto_install:
+	install -Dm0755 debian/eyalsec-cli-bin debian/eyalsec-cli/usr/bin/eyalsec-cli
+
+override_dh_auto_clean:
+	rm -rf debian/.gocache debian/.gopath debian/eyalsec-cli-bin
+
+override_dh_dwz:
+
+override_dh_strip:

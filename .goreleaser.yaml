@@ -1,0 +1,88 @@
+# Release configuration. A pushed tag vX.Y.Z runs .github/workflows/release.yml,
+# which runs GoReleaser with this file and then attests every artifact.
+version: 2
+project_name: eyalsec-cli
+
+builds:
+  - id: eyalsec-cli
+    main: ./cmd/eyalsec-cli
+    binary: eyalsec-cli
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X eyalsec.com/cli/internal/cli.version=v{{ .Version }}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+archives:
+  - id: default
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - LICENSE
+      - README.md
+
+nfpms:
+  - id: packages
+    package_name: eyalsec-cli
+    file_name_template: "{{ .ConventionalFileName }}"
+    vendor: EyalSec
+    homepage: https://eyalsec.com
+    maintainer: EyalSec <support@eyalsec.com>
+    description: |-
+      Command-line client for the EyalSec API.
+      Lists and searches your EyalSec security events, shows one event's full
+      detail, exports events as CSV or JSON, and lists your machines and runs.
+    license: MIT
+    section: utils
+    priority: optional
+    formats: [deb, rpm]
+    bindir: /usr/bin
+    # The API is reached over https, which needs the system's CA bundle.
+    dependencies:
+      - ca-certificates
+    contents:
+      - src: LICENSE
+        dst: /usr/share/doc/eyalsec-cli/LICENSE
+        file_info:
+          mode: 0644
+      - src: README.md
+        dst: /usr/share/doc/eyalsec-cli/README.md
+        file_info:
+          mode: 0644
+    rpm:
+      group: Applications/System
+      summary: Command-line client for the EyalSec API
+
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-dev"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^ci:"
+
+release:
+  github:
+    owner: EyalSec
+    name: eyalsec-cli
+  footer: |
+    Verify a download before you run it:
+
+    ```
+    sha256sum --ignore-missing -c checksums.txt
+    gh attestation verify eyalsec-cli_{{ .Version }}_linux_amd64.tar.gz --repo EyalSec/eyalsec-cli
+    ```

@@ -1,0 +1,5 @@
+<!-- Open Build Service: fetch Source0 (the GitHub release tarball) named in
+     eyalsec-cli.spec, so the package needs only this file and the spec. -->
+<services>
+  <service name="download_files"/>
+</services>

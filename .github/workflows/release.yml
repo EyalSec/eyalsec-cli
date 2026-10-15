@@ -1,0 +1,77 @@
+name: Release
+
+# Push a tag such as v0.1.0 to build and publish a release:
+#   binaries for Linux, macOS and Windows on amd64 and arm64, .deb and .rpm
+#   packages, checksums.txt, and a signed build provenance attestation for
+#   every one of them. The Homebrew formula in EyalSec/homebrew-tap is then
+#   updated to the new version.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write      # create the release and upload its files
+      id-token: write      # sign the attestations
+      attestations: write  # store the attestations
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v6
+        with:
+          go-version: stable
+      - run: go test -race ./...
+      - uses: goreleaser/goreleaser-action@v7
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/attest-build-provenance@v4
+        with:
+          subject-checksums: dist/checksums.txt
+      - uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: dist/checksums.txt
+
+  homebrew:
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+      - name: Update the Homebrew formula
+        env:
+          TAP_KEY: ${{ secrets.HOMEBREW_TAP_DEPLOY_KEY }}
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if [ -z "$TAP_KEY" ]; then
+            echo "::warning::HOMEBREW_TAP_DEPLOY_KEY is not set; update EyalSec/homebrew-tap by hand with packaging/homebrew/formula.sh"
+            exit 0
+          fi
+          gh release download "$TAG" --pattern checksums.txt --dir "$RUNNER_TEMP"
+          mkdir -p ~/.ssh
+          printf '%s\n' "$TAP_KEY" > ~/.ssh/tap_key
+          chmod 600 ~/.ssh/tap_key
+          echo "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl" >> ~/.ssh/known_hosts
+          export GIT_SSH_COMMAND="ssh -i ~/.ssh/tap_key -o IdentitiesOnly=yes"
+          git clone --depth 1 git@github.com:EyalSec/homebrew-tap.git "$RUNNER_TEMP/tap"
+          mkdir -p "$RUNNER_TEMP/tap/Formula"
+          packaging/homebrew/formula.sh "${TAG#v}" "$RUNNER_TEMP/checksums.txt" > "$RUNNER_TEMP/tap/Formula/eyalsec-cli.rb"
+          cd "$RUNNER_TEMP/tap"
+          git add Formula/eyalsec-cli.rb
+          if git diff --cached --quiet; then
+            echo "The formula is already at $TAG."
+            exit 0
+          fi
+          git -c user.name="Eyal Gabay" -c user.email="eyal@eyalsec.com" commit -m "eyalsec-cli ${TAG#v}"
+          git push origin HEAD
