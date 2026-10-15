@@ -44,7 +44,7 @@ sudo dnf install https://github.com/EyalSec/eyalsec-cli/releases/download/v0.1.0
 
 On arm64, use the `arm64` `.deb` or the `aarch64` `.rpm` from the same release.
 
-**Any other system**: download the `.tar.gz` (or the `.zip` on Windows) for your platform from the [release page](https://github.com/EyalSec/eyalsec-cli/releases/latest) and put `eyalsec-cli` on your `PATH`. On macOS, a file downloaded with a browser is quarantined until you clear it with `xattr -d com.apple.quarantine eyalsec-cli`; Homebrew does this for you.
+**Any other system**: download the `.tar.gz` (or the `.zip` on Windows) for your platform from the [release page](https://github.com/EyalSec/eyalsec-cli/releases/latest) and put `eyalsec-cli` on your `PATH`. On macOS, a file downloaded with a browser is quarantined until you clear it with `xattr -d com.apple.quarantine eyalsec-cli`; Homebrew installs and `curl` downloads are not affected.
 
 **With Go** 1.22 or newer:
 
